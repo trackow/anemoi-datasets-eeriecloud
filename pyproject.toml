@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anemoi-datasets-eeriecloud"
+version = "0.1.0"
+description = "EERIE cloud data source plugin for anemoi-datasets"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.9"
+dependencies = [
+    "anemoi-datasets>=0.5.0",
+    "earthkit-data>=0.10.0",
+    "earthkit-regrid>=0.3.0",
+    "xarray",
+    "fsspec",
+    "s3fs",
+    "requests",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-mock"]
+fallback = ["xesmf", "scipy"]
+
+[project.entry-points."anemoi.datasets.create.sources"]
+eeriecloud = "anemoi_datasets_eeriecloud.source:EerieCloudSource"
+
+[tool.setuptools.packages.find]
+where = ["src"]
