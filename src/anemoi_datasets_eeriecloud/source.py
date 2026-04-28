@@ -30,6 +30,7 @@ class EerieCloudSource(LegacySource):
         grid: str | None = None,
         interpolation: str = "earthkit",
         asset: str = "eerie-cloud",
+        base_path: str | None = None,
         **kwargs: Any,
     ):
         """Execute the eeriecloud source.
@@ -56,38 +57,45 @@ class EerieCloudSource(LegacySource):
             Regridding method ("earthkit" or "fallback").
         asset : str
             STAC asset key ("eerie-cloud" for cloud, "dkrz-disk" for HPC).
+        base_path : str, optional
+            HPC base path for direct parquet access (skips STAC entirely).
         """
         from .presets import resolve_preset
         from .regrid import detect_source_grid, regrid
         from .stac import fetch_stac_item, open_dataset
         from .variables import select_levels, select_time, select_variables
 
-        # 1. Resolve collection + item ID
-        if dataset is not None:
-            collection_id, full_item_id = resolve_preset(dataset, item)
-        elif collection is not None:
-            # Build full item ID from explicit collection
-            # Pattern: {collection}-disk.model-output.{...}.{item}-zarr-kerchunk
-            # User provides the full collection; we construct the item ID
-            full_item_id = f"{collection}-disk.model-output.{_extract_model_part(collection)}.{item}-zarr-kerchunk"
-            collection_id = collection
-        else:
-            raise ValueError(
-                "Either 'dataset' (preset name) or 'collection' (STAC collection ID) must be provided."
-            )
+        # 0. Direct HPC access — skip STAC entirely
+        if base_path is not None:
+            from .hpc import open_dataset_hpc, resolve_hpc_path
 
-        logger.info("Loading EERIE data: collection=%s, item=%s", collection_id, item)
-
-        # 2. Fetch STAC metadata and open dataset
-        stac_item = fetch_stac_item(collection_id, full_item_id)
-
-        if asset == "dkrz-disk":
-            from .hpc import open_dataset_hpc, parquet_path_from_stac
-
-            parquet_path = parquet_path_from_stac(stac_item, asset=asset)
+            parquet_path = resolve_hpc_path(item, base_path=base_path)
+            logger.info("Direct HPC access: %s", parquet_path)
             ds = open_dataset_hpc(parquet_path)
         else:
-            ds = open_dataset(stac_item, asset=asset)
+            # 1. Resolve collection + item ID via STAC
+            if dataset is not None:
+                collection_id, full_item_id = resolve_preset(dataset, item)
+            elif collection is not None:
+                full_item_id = f"{collection}-disk.model-output.{_extract_model_part(collection)}.{item}-zarr-kerchunk"
+                collection_id = collection
+            else:
+                raise ValueError(
+                    "Either 'dataset' (preset name) or 'collection' (STAC collection ID) must be provided."
+                )
+
+            logger.info("Loading EERIE data: collection=%s, item=%s", collection_id, item)
+
+            # 2. Fetch STAC metadata and open dataset
+            stac_item = fetch_stac_item(collection_id, full_item_id)
+
+            if asset == "dkrz-disk":
+                from .hpc import open_dataset_hpc, parquet_path_from_stac
+
+                parquet_path = parquet_path_from_stac(stac_item, asset=asset)
+                ds = open_dataset_hpc(parquet_path)
+            else:
+                ds = open_dataset(stac_item, asset=asset)
 
         # 3. Select variables and levels
         ds = select_variables(ds, param)
