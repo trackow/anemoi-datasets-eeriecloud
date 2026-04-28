@@ -4,6 +4,7 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+.venv/
 
 # Testing
 .pytest_cache/
@@ -17,3 +18,4 @@ build/
 *.zarr/
 *.zarr.sync/
 *.zarr.storage_for_statistics.tmp/
+*.lock

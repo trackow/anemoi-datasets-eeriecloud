@@ -17,6 +17,7 @@ dependencies = [
     "fsspec",
     "s3fs",
     "requests",
+    "gribscan",
 ]
 
 [project.optional-dependencies]

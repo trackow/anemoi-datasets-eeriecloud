@@ -70,6 +70,8 @@ input:
 
 output:
   flatten_grid: true
-  order_by: [valid_datetime, param_level]
+  order_by: [valid_datetime, param_level, number]
+
+build:
   remapping:
     param_level: "{param}_{levelist}"
