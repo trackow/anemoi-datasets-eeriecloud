@@ -43,6 +43,26 @@ Build the dataset:
 anemoi-datasets create recipes/eerie-ifs-fesom-hist1950-test.yaml test.zarr
 ```
 
+Plot the output:
+
+```bash
+python plot_dataset.py test.zarr --output-dir output_plots
+```
+
+## Example Output
+
+**10m u-wind (10u) — O96 grid, 1970-01-01 06:00 UTC:**
+
+![10u](docs/images/10u.png)
+
+**Temperature on pressure levels (1000, 500, 250 hPa):**
+
+![t_all_levels](docs/images/t_all_levels.png)
+
+**Insolation (forcing field):**
+
+![insolation](docs/images/insolation.png)
+
 ## Parameters
 
 | Parameter | Required | Description |
